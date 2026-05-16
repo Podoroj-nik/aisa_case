@@ -23,9 +23,6 @@ os.environ['REQUESTS_CA_BUNDLE'] = ''
 os.environ['SSL_CERT_FILE'] = ''
 os.environ['CURL_CA_BUNDLE'] = ''
 
-# ============================================================
-#                   НАСТРОЙКИ
-# ============================================================
 
 BASE_DIR = Path(__file__).resolve().parent
 TEMPLATES_DIR = BASE_DIR / "templates"
@@ -38,9 +35,6 @@ DB_PATH = os.getenv("DB_PATH", "/data/chats.db")
 
 token_stats = {"afisha": 0, "dialog": 0}
 
-# ============================================================
-#                    УТИЛИТЫ
-# ============================================================
 
 def read_html(filename: str) -> str:
     path = TEMPLATES_DIR / filename
@@ -78,9 +72,6 @@ def call_gigachat_simple(prompt: str, source: str) -> dict:
 
     return {"response": text, "tokens_consumed": tokens_used}
 
-# ============================================================
-#                    МОДЕЛИ
-# ============================================================
 
 class EventAIRequest(BaseModel):
     eventId: int
@@ -113,9 +104,6 @@ class MessageOut(BaseModel):
     class Config:
         from_attributes = True
 
-# ============================================================
-#                    БАЗА ДАННЫХ
-# ============================================================
 
 from sqlalchemy import Column, String, Text, DateTime, ForeignKey, func
 from sqlalchemy.orm import DeclarativeBase, relationship
@@ -159,9 +147,6 @@ async def session_scope(factory: async_sessionmaker[AsyncSession]):
             await session.rollback()
             raise
 
-# ============================================================
-#                    GigaChatClient
-# ============================================================
 
 class GigaChatClient:
     def __init__(self):
@@ -210,9 +195,6 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="Сириус — ИИ-Агент", lifespan=lifespan)
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
-# ============================================================
-#                    ЭНДПОИНТЫ АФИШИ
-# ============================================================
 
 @app.get("/", response_class=HTMLResponse)
 async def guest_index(request: Request):
@@ -255,9 +237,6 @@ async def api_afisha_ai_details(request: Request, event: EventAIRequest):
         "tokens_consumed": result["tokens_consumed"]
     }
 
-# ============================================================
-#                    ЭНДПОИНТЫ ЧАТОВ
-# ============================================================
 
 @app.get("/admin", response_class=HTMLResponse)
 async def admin_chat_page(request: Request):
@@ -339,9 +318,6 @@ async def send_message(chat_id: str, payload: SendMessageIn, request: Request):
             created_at=assistant_msg.created_at
         )
 
-# ============================================================
-#                    СТАТИСТИКА
-# ============================================================
 
 @app.get("/api/admin/stats/tokens")
 async def api_admin_stats(request: Request):
