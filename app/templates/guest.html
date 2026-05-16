@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Сириус — Афиша мероприятий</title>
-    <!-- Markdown-рендерер -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         :root {
@@ -38,7 +37,6 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        /* ── Header ─────────────────────────── */
         .header {
             background: var(--white);
             border-bottom: 1px solid rgba(101, 186, 182, 0.2);
@@ -106,7 +104,6 @@
             box-shadow: 0 4px 14px rgba(136, 208, 196, 0.35);
         }
 
-        /* ── Hero ──────────────────────────── */
         .hero {
             background: linear-gradient(160deg, var(--white) 0%, var(--bg-light) 60%);
             padding: 48px 32px 40px;
@@ -141,14 +138,12 @@
             margin: 0 auto;
         }
 
-        /* ── Container ─────────────────────── */
         .container {
             max-width: 1300px;
             margin: 0 auto;
             padding: 36px 28px 60px;
         }
 
-        /* ── Filters ──────────────────────── */
         .filters-bar {
             display: flex;
             gap: 12px;
@@ -194,7 +189,6 @@
             background: rgba(255, 255, 255, 0.35);
         }
 
-        /* ── Events Grid ───────────────────── */
         .events-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(370px, 1fr));
@@ -218,7 +212,6 @@
             border-color: rgba(136, 208, 196, 0.35);
         }
 
-        /* ── Card Image ────────────────────── */
         .event-card-image {
             position: relative;
             width: 100%;
@@ -263,7 +256,6 @@
             z-index: 2;
         }
 
-        /* ── Card Body ─────────────────────── */
         .event-card-body {
             padding: 22px 22px 18px;
             flex: 1;
@@ -334,7 +326,6 @@
             width: fit-content;
         }
 
-        /* ── AI Button ─────────────────────── */
         .btn-ai {
             width: 100%;
             padding: 13px;
@@ -375,7 +366,6 @@
             font-size: 1rem;
         }
 
-        /* ── MODAL OVERLAY ─────────────────── */
         .modal-overlay {
             position: fixed;
             inset: 0;
@@ -398,7 +388,6 @@
             to { opacity: 1; }
         }
 
-        /* ── MODAL CARD ────────────────────── */
         .modal-card {
             background: var(--white);
             border-radius: var(--radius-lg);
@@ -536,7 +525,6 @@
             flex-shrink: 0;
         }
 
-        /* ── AI Response in Modal ──────────── */
         .modal-ai-section {
             background: var(--bg-light);
             border-radius: var(--radius);
@@ -562,7 +550,6 @@
             color: var(--text-dark);
         }
 
-        /* ── Стили для Markdown-контента ──── */
         .modal-ai-content h1,
         .modal-ai-content h2,
         .modal-ai-content h3,
@@ -670,7 +657,6 @@
             font-size: 0.9rem;
         }
 
-        /* ── Pulse animation ──────────────── */
         .pulse-dot {
             display: inline-block;
             width: 8px;
@@ -687,7 +673,6 @@
             50% { opacity: 1; transform: scale(1.3); }
         }
 
-        /* ── Empty State ──────────────────── */
         .empty-state {
             grid-column: 1 / -1;
             text-align: center;
@@ -711,7 +696,6 @@
             font-size: 0.9rem;
         }
 
-        /* ── Footer ────────────────────────── */
         .footer {
             text-align: center;
             padding: 28px;
@@ -735,7 +719,6 @@
             display: none !important;
         }
 
-        /* ── Responsive ────────────────────── */
         @media (max-width: 768px) {
             .header {
                 padding: 0 16px;
@@ -784,7 +767,6 @@
 </head>
 <body>
 
-    <!-- ═══════════════ HEADER ═══════════════ -->
     <header class="header">
         <div class="header-brand">
             <img
@@ -802,14 +784,12 @@
         </a>
     </header>
 
-    <!-- ═══════════════ HERO ════════════════ -->
     <section class="hero">
         <div class="hero-badge">✨ ИИ-помощник</div>
         <h1>Культурная жизнь Сириуса</h1>
         <p>Все мероприятия федеральной территории в одном окне. Нажмите «Подробнее от ИИ», чтобы узнать больше о любом событии.</p>
     </section>
 
-    <!-- ═══════════════ MAIN ════════════════ -->
     <div class="container">
         <div class="filters-bar" id="filtersBar">
             <button class="filter-chip active" data-type="all">
@@ -818,29 +798,22 @@
         </div>
 
         <div class="events-grid" id="eventsContainer">
-            <!-- Динамическое наполнение -->
         </div>
     </div>
-
-    <!-- ═══════════════ MODAL ═══════════════ -->
     <div class="modal-overlay hidden" id="modalOverlay">
         <div class="modal-card" id="modalCard">
-            <!-- Динамическое наполнение -->
         </div>
     </div>
-
-    <!-- ═══════════════ FOOTER ══════════════ -->
     <footer class="footer">
         Федеральная территория «Сириус» &nbsp;·&nbsp;
         <a href="https://pro.sirius-ft.ru" target="_blank" rel="noopener">pro.sirius-ft.ru</a>
     </footer>
 
     <script>
-        // ── Настройка marked.js ──────────────────
         if (typeof marked !== 'undefined') {
             marked.setOptions({
-                breaks: true,        // Перенос строк как <br>
-                gfm: true,           // GitHub Flavored Markdown
+                breaks: true,
+                gfm: true,
                 headerIds: false,
                 mangle: false
             });
@@ -849,7 +822,6 @@
         let allEvents = [];
         let activeType = 'all';
 
-        // ── Загрузка мероприятий ──────────────────
         async function loadEvents() {
             const container = document.getElementById('eventsContainer');
             container.innerHTML = `
@@ -893,7 +865,6 @@
             }
         }
 
-        // ── Построение фильтров ──────────────────
         function buildFilters() {
             const types = [...new Set(allEvents.map(e => e.afishaTypeName).filter(Boolean))];
             const bar = document.getElementById('filtersBar');
@@ -921,7 +892,6 @@
             });
         }
 
-        // ── Отрисовка карточек ───────────────────
         function renderEvents() {
             const container = document.getElementById('eventsContainer');
             const filtered = activeType === 'all'
@@ -971,12 +941,10 @@
             }).join('');
         }
 
-        // ── Обработчик ошибки загрузки изображения ──
         function handleImageError(img) {
             img.style.display = 'none';
         }
 
-        // ── Открытие модального окна ─────────────
         function openModal(eventId) {
             const event = allEvents.find(e => e.eventId === eventId);
             if (!event) return;
@@ -1030,7 +998,6 @@
             fetchAIDetails(event);
         }
 
-        // ── Закрытие модального окна ─────────────
         function closeModal() {
             const overlay = document.getElementById('modalOverlay');
             overlay.classList.add('hidden');
@@ -1049,7 +1016,6 @@
             }
         });
 
-        // ── Запрос к ИИ ──────────────────────────
         async function fetchAIDetails(event) {
             const loadingEl = document.getElementById('modalAiLoading');
             const contentEl = document.getElementById('modalAiContent');
@@ -1076,16 +1042,12 @@
 
                 const data = await res.json();
 
-                // ── Рендеринг Markdown → HTML ──────────
                 let htmlContent;
                 if (typeof marked !== 'undefined' && typeof marked.parse === 'function') {
-                    // marked.js v4+
                     htmlContent = marked.parse(data.response);
                 } else if (typeof marked !== 'undefined' && typeof marked === 'function') {
-                    // marked.js v0.x
                     htmlContent = marked(data.response);
                 } else {
-                    // Запасной вариант: простой текст с переносами строк
                     htmlContent = escapeHtml(data.response).replace(/\n/g, '<br>');
                 }
 
@@ -1093,7 +1055,6 @@
                 contentEl.innerHTML = htmlContent;
                 contentEl.classList.remove('hidden');
 
-                // Прокручиваем модалку к началу ответа
                 contentEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             } catch (e) {
                 loadingEl.classList.add('hidden');
@@ -1102,7 +1063,6 @@
             }
         }
 
-        // ── Утилиты ──────────────────────────────
         function escapeHtml(str) {
             if (!str) return '';
             const div = document.createElement('div');
@@ -1114,7 +1074,6 @@
             return (str || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         }
 
-        // ── Инициализация ────────────────────────
         document.addEventListener('DOMContentLoaded', loadEvents);
     </script>
 

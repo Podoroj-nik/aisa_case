@@ -1,6 +1,4 @@
-# app.py
 from __future__ import annotations
-
 import os
 import uuid
 import hashlib
@@ -23,40 +21,28 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# ── Отключаем проверку SSL для GigaChat (ТОЛЬКО ДЛЯ РАЗРАБОТКИ) ──
 os.environ['REQUESTS_CA_BUNDLE'] = ''
 os.environ['SSL_CERT_FILE'] = ''
 
-# ============================================================
-#                   НАСТРОЙКИ И КОНФИГУРАЦИЯ
-# ============================================================
 
 BASE_DIR = Path(__file__).resolve().parent
 TEMPLATES_DIR = BASE_DIR / "templates"
 
-# GigaChat
 GIGACHAT_CREDENTIALS = os.getenv("GIGACHAT_CREDENTIALS")
 print(GIGACHAT_CREDENTIALS)
 GIGACHAT_VERIFY_SSL = False
 
-# Афиша
 AFISHA_API_URL = "http://pro.sirius-ft.ru/api/afisha/event/list"
 
-# БД
 DB_PATH = os.getenv("DB_PATH", str(BASE_DIR / "chats.db"))
 
-# Раздельная статистика токенов
 token_stats = {
     "afisha": 0,
     "dialog": 0
 }
 
-# ============================================================
-#                        УТИЛИТЫ
-# ============================================================
 
 def read_html(filename: str) -> str:
-    """Чтение HTML-шаблона из файла"""
     path = TEMPLATES_DIR / filename
     if not path.exists():
         return f"<h1>Ошибка</h1><p>Файл {filename} не найден</p>"
@@ -64,14 +50,9 @@ def read_html(filename: str) -> str:
         return f.read()
 
 def check_internal_ip(request: Request) -> bool:
-    """Проверка IP (заглушка для разработки)"""
     return True
 
 def call_gigachat_simple(prompt: str, source: str) -> dict:
-    """
-    Прямой вызов GigaChat API (для афиши).
-    Возвращает: {"response": str, "tokens_consumed": int}
-    """
     try:
         from gigachat import GigaChat
 
@@ -94,7 +75,6 @@ def call_gigachat_simple(prompt: str, source: str) -> dict:
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"Ошибка GigaChat: {str(e)}")
 
-    # Раздельный учёт токенов
     if source == "afisha":
         token_stats["afisha"] += tokens_used
     else:
@@ -105,10 +85,6 @@ def call_gigachat_simple(prompt: str, source: str) -> dict:
 
     return {"response": text, "tokens_consumed": tokens_used}
 
-# ============================================================
-#                        МОДЕЛИ PYDANTIC
-# ============================================================
-
 class EventAIRequest(BaseModel):
     eventId: int
     eventName: str
@@ -118,7 +94,6 @@ class EventAIRequest(BaseModel):
     eventEndTime: str
     afishaTypeName: str
 
-# ── Для чатов ──
 class CreateChatIn(BaseModel):
     title: str = "Новый чат"
 
@@ -143,9 +118,6 @@ class MessageOut(BaseModel):
     class Config:
         from_attributes = True
 
-# ============================================================
-#                    БАЗА ДАННЫХ (SQLAlchemy)
-# ============================================================
 
 from sqlalchemy import Column, String, Text, DateTime, ForeignKey, func
 from sqlalchemy.orm import DeclarativeBase, relationship
@@ -193,22 +165,14 @@ async def session_scope(factory: async_sessionmaker[AsyncSession]):
             await session.rollback()
             raise
 
-# ============================================================
-#                    GigaChat ДЛЯ ЧАТОВ
-# ============================================================
 
 class GigaChatClient:
-    """Клиент для работы с GigaChat API (режим диалога с историей)"""
 
     def __init__(self):
         self.credentials = GIGACHAT_CREDENTIALS
         self.verify_ssl = GIGACHAT_VERIFY_SSL
 
     async def chat(self, messages: list[dict]) -> str:
-        """
-        Отправляет историю сообщений в GigaChat и возвращает ответ.
-        messages: [{"role": "user"|"assistant", "content": "..."}]
-        """
         try:
             from gigachat import GigaChat
 
@@ -217,7 +181,6 @@ class GigaChatClient:
                 verify_ssl_certs=self.verify_ssl
             )
 
-            # Формируем промпт из истории
             prompt_parts = []
             for msg in messages:
                 prefix = "Пользователь" if msg["role"] == "user" else "Ассистент"
@@ -229,7 +192,6 @@ class GigaChatClient:
             text = response.choices[0].message.content
             tokens_used = response.usage.total_tokens
 
-            # Учёт токенов
             token_stats["dialog"] += tokens_used
             ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             print(f"[{ts}] source=dialog | tokens={tokens_used} | total_dialog={token_stats['dialog']}")
@@ -241,9 +203,6 @@ class GigaChatClient:
         except Exception as e:
             raise HTTPException(status_code=502, detail=f"Ошибка GigaChat: {str(e)}")
 
-# ============================================================
-#                    ИНИЦИАЛИЗАЦИЯ ПРИЛОЖЕНИЯ
-# ============================================================
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -263,25 +222,18 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Сириус — ИИ-Агент", lifespan=lifespan)
 
-# Шаблоны и статика
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 static_dir = BASE_DIR / "static"
 if static_dir.exists():
     app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
-# ============================================================
-#               ГОСТЕВОЙ ИНТЕРФЕЙС — АФИША
-# ============================================================
-
 @app.get("/", response_class=HTMLResponse)
 async def guest_index(request: Request):
-    """Гостевая страница — Афиша"""
     return HTMLResponse(content=read_html("guest.html"))
 
 
 @app.post("/api/afisha/events")
 async def api_afisha_events(request: Request):
-    """API: список мероприятий (прокси к Афише)"""
     check_internal_ip(request)
 
     async with httpx.AsyncClient(timeout=10.0) as client:
@@ -297,7 +249,6 @@ async def api_afisha_events(request: Request):
 
 @app.post("/api/afisha/event/ai-details")
 async def api_afisha_ai_details(request: Request, event: EventAIRequest):
-    """API: получение подробностей о мероприятии от GigaChat"""
     check_internal_ip(request)
 
     event_description = (
@@ -326,19 +277,14 @@ async def api_afisha_ai_details(request: Request, event: EventAIRequest):
         "tokens_consumed": result["tokens_consumed"]
     }
 
-# ============================================================
-#               АДМИН-ПАНЕЛЬ — ЧАТЫ С ИИ
-# ============================================================
 
 @app.get("/admin", response_class=HTMLResponse)
 async def admin_chat_page(request: Request):
-    """Страница админ-панели с чатами"""
     return HTMLResponse(content=read_html("admin_chat.html"))
 
 
 @app.get("/api/chats", response_model=list[ChatOut])
 async def list_chats(request: Request):
-    """Список всех чатов"""
     factory = request.app.state.session_factory
     async with session_scope(factory) as session:
         rows = await session.execute(select(Chat).order_by(Chat.created_at.desc()))
@@ -351,7 +297,6 @@ async def list_chats(request: Request):
 
 @app.post("/api/chats", response_model=ChatOut)
 async def create_chat(payload: CreateChatIn, request: Request):
-    """Создать новый чат"""
     factory = request.app.state.session_factory
     chat = Chat(id=str(uuid4()), title=payload.title)
     async with session_scope(factory) as session:
@@ -363,7 +308,6 @@ async def create_chat(payload: CreateChatIn, request: Request):
 
 @app.delete("/api/chats/{chat_id}")
 async def delete_chat(chat_id: str, request: Request):
-    """Удалить чат"""
     factory = request.app.state.session_factory
     async with session_scope(factory) as session:
         chat = await session.get(Chat, chat_id)
@@ -375,7 +319,6 @@ async def delete_chat(chat_id: str, request: Request):
 
 @app.get("/api/chats/{chat_id}/messages", response_model=list[MessageOut])
 async def list_messages(chat_id: str, request: Request):
-    """Сообщения конкретного чата"""
     factory = request.app.state.session_factory
     async with session_scope(factory) as session:
         chat = await session.get(Chat, chat_id)
@@ -396,7 +339,6 @@ async def list_messages(chat_id: str, request: Request):
 
 @app.post("/api/chats/{chat_id}/send", response_model=MessageOut)
 async def send_message(chat_id: str, payload: SendMessageIn, request: Request):
-    """Отправить сообщение в чат и получить ответ от ИИ"""
     factory = request.app.state.session_factory
     gigachat: GigaChatClient = request.app.state.gigachat
 
@@ -405,12 +347,10 @@ async def send_message(chat_id: str, payload: SendMessageIn, request: Request):
         if not chat:
             raise HTTPException(status_code=404, detail="Чат не найден")
 
-        # Сообщение пользователя
         user_msg = Message(chat_id=chat_id, role="user", content=payload.content)
         session.add(user_msg)
         await session.flush()
 
-        # Загружаем историю (последние 20 сообщений)
         rows = await session.execute(
             select(Message)
             .where(Message.chat_id == chat_id)
@@ -419,15 +359,12 @@ async def send_message(chat_id: str, payload: SendMessageIn, request: Request):
         )
         history = rows.scalars().all()
 
-        # Формируем список для GigaChat
         gc_messages = [{"role": m.role, "content": m.content} for m in history]
 
-        # Ответ ассистента
         assistant_text = await gigachat.chat(gc_messages)
         assistant_msg = Message(chat_id=chat_id, role="assistant", content=assistant_text)
         session.add(assistant_msg)
 
-        # Авто-заголовок чата из первого сообщения
         if not chat.title or chat.title == "Новый чат":
             chat.title = payload.content.strip().splitlines()[0][:100]
 
@@ -442,18 +379,11 @@ async def send_message(chat_id: str, payload: SendMessageIn, request: Request):
             created_at=assistant_msg.created_at
         )
 
-# ============================================================
-#               СТАТИСТИКА ТОКЕНОВ
-# ============================================================
 
 @app.get("/api/admin/stats/tokens")
 async def api_admin_stats(request: Request):
-    """Статистика токенов"""
     return {"tokens_consumed_by_source": token_stats}
 
-# ============================================================
-#                   СЛУЖЕБНЫЕ ЭНДПОИНТЫ
-# ============================================================
 
 @app.get("/health")
 async def health():

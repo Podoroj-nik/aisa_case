@@ -19,7 +19,6 @@ class Settings:
 
 
 def get_settings() -> Settings:
-    # Если задана единая переменная GIGACHAT_CREDENTIALS, разбираем её
     creds = getenv("GIGACHAT_CREDENTIALS", "").strip()
     client_id = ""
     client_secret = ""
@@ -31,7 +30,6 @@ def get_settings() -> Settings:
         except Exception:
             pass
 
-    # Если нет – берём отдельные переменные (совместимость)
     if not client_id:
         client_id = getenv("GIGACHAT_CLIENT_ID", "").strip()
     if not client_secret:

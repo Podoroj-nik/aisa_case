@@ -21,7 +21,6 @@ function setStatus(text) {
   $("status").textContent = text || "";
 }
 
-// Упрощённое приветственное окно
 function showWelcomeScreen() {
   const box = $("messages");
   box.innerHTML = `
