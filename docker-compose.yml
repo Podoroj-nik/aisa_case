@@ -1,16 +1,33 @@
-# version: "3.9"
-
 services:
   app:
     build: .
     container_name: sirius-ai-agent
-    ports:
-      - "0.0.0.0:8000:8000"
+    expose:
+      - "8000"
     environment:
       - GIGACHAT_CREDENTIALS=${GIGACHAT_CREDENTIALS}
       - DB_PATH=/data/chats.db
-      - AFISHA_API_URL=http://pro.sirius-ft.ru/api/afisha/event/list
     volumes:
-      - ./data:/data          # постоянное хранение БД
-      - ./app/templates:/app/app/templates  # для hot-reload шаблонов (опционально)
+      - ./data:/data
     restart: unless-stopped
+    networks:
+      - sirius-net
+
+  nginx:
+    image: nginx:alpine
+    container_name: sirius-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - app
+    restart: unless-stopped
+    networks:
+      - sirius-net
+
+networks:
+  sirius-net:
+    driver: bridge
