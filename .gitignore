@@ -1,0 +1,18 @@
+# БД
+data/
+*.db
+
+# Виртуальное окружение
+.venv/
+venv/
+
+# Кэш Python
+__pycache__/
+*.pyc
+
+# Переменные окружения
+.env
+
+# IDE
+.idea/
+.vscode/

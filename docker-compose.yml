@@ -1,19 +1,16 @@
+version: "3.9"
+
 services:
-  web:
+  app:
     build: .
+    container_name: sirius-ai-agent
     ports:
       - "8000:8000"
     environment:
-      DB_PATH: /data/app.db
-      GIGACHAT_CREDENTIALS: ${GIGACHAT_CREDENTIALS}
-      GIGACHAT_API_BASE: ${GIGACHAT_API_BASE:-https://gigachat.devices.sberbank.ru/api/v1}
-      GIGACHAT_AUTH_URL: ${GIGACHAT_AUTH_URL:-https://ngw.devices.sberbank.ru:9443/api/v2/oauth}
-      GIGACHAT_SCOPE: ${GIGACHAT_SCOPE:-GIGACHAT_API_PERS}
-      GIGACHAT_MODEL: ${GIGACHAT_MODEL:-GigaChat}
-      GIGACHAT_VERIFY_SSL: ${GIGACHAT_VERIFY_SSL:-0}
-      HISTORY_MESSAGES_LIMIT: ${HISTORY_MESSAGES_LIMIT:-24}
+      - GIGACHAT_CREDENTIALS=${GIGACHAT_CREDENTIALS}
+      - DB_PATH=/data/chats.db
+      - AFISHA_API_URL=http://pro.sirius-ft.ru/api/afisha/event/list
     volumes:
-      - app_data:/data
-
-volumes:
-  app_data:
+      - ./data:/data          # постоянное хранение БД
+      - ./app/templates:/app/app/templates  # для hot-reload шаблонов (опционально)
+    restart: unless-stopped
