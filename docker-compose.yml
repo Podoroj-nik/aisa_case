@@ -5,7 +5,7 @@ services:
     build: .
     container_name: sirius-ai-agent
     ports:
-      - "8000:8000"
+      - "0.0.0.0:8000:8000"
     environment:
       - GIGACHAT_CREDENTIALS=${GIGACHAT_CREDENTIALS}
       - DB_PATH=/data/chats.db
